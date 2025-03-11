@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaguar Sales Performance Dashboard</title>
+    <style>
+        :root {
+            --primary: #0D1B2A;
+            --secondary: #1B263B;
+            --accent: #415A77;
+            --light: #778DA9;
+            --highlight: #E0E1DD;
+            --jaguar-green: #006A4D;
+            --positive: #28a745;
+            --negative: #dc3545;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            max-width: 150px;
+            margin-right: 20px;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .title h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .title p {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .comparison-bar {
+            background: var(--secondary);
+            color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .comparison-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .comparison-title {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--highlight);
+        }
+        
+        .comparison-values {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .value-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: bold;
+            min-width: 100px;
+        }
+        
+        .value-year {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .value-number {
+            font-size: 1.2rem;
+        }
+        
+        .comparison-change {
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .positive {
+            color: var(--positive);
+        }
+        
+        .negative {
+            color: var(--negative);
+        }
+        
+        .arrow-up::before {
+            content: "▲";
+            font-size: 0.8rem;
+        }
+        
+        .arrow-down::before {
+            content: "▼";
+            font-size: 0.8rem;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 6.5rem;
+            margin-bottom: 6rem;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            height: 400px;
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-align: center;
+        }
+        
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .data-table-container {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+        
+        .data-table-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-align: center;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        th:first-child, td:first-child {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            background: inherit;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #eef2f7;
+        }
+        
+        .toggle-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .toggle-btn {
+            background: var(--light);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-btn.active {
+            background: var(--accent);
+            font-weight: bold;
+        }
+        
+        .toggle-btn:hover {
+            background: var(--accent);
+        }
+        
+        footer {
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        footer p {
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .note {
+            font-size: 0.85rem;
+            font-style: italic;
+            color: #666;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .comparison-bar {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+            
+            .toggle-buttons {
+                flex-wrap: wrap;
+            }
+        }
+.sources-container {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.sources-container h2 {
+    font-size: 1.4rem;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.sources-container ul {
+    list-style-type: none;
+    padding: 0;
+    text-align: center;
+}
+
+.sources-container ul li {
+    margin: 0.5rem 0;
+}
+
+.sources-container ul li a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.sources-container ul li a:hover {
+    text-decoration: underline;
+}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="title">
+                <h1>Jaguar Sales Performance Dashboard</h1>
+                <p>Comprehensive analysis of sales data from 2015 to 2024</p>
+            </div>
+            <div>
+                <p id="current-date">Data as of March 10, 2025</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="comparison-bar">
+            <div class="comparison-item">
+                <div class="comparison-title">Sales Volume</div>
+                <div class="comparison-values">
+                    <div class="value-box">
+                        <div class="value-year">2015</div>
+                        <div class="value-number">462,209</div>
+                    </div>
+                    <div class="value-box">
+                        <div class="value-year">2024</div>
+                        <div class="value-number">431,733</div>
+                    </div>
+                </div>
+                <div class="comparison-change negative">
+                    <span class="arrow-down"></span> -6.6% Change
+                </div>
+            </div>
+            
+            <div class="comparison-item">
+                <div class="comparison-title">Revenue</div>
+                <div class="comparison-values">
+                    <div class="value-box">
+                        <div class="value-year">2015</div>
+                        <div class="value-number">£21.9B</div>
+                    </div>
+                    <div class="value-box">
+                        <div class="value-year">2024</div>
+                        <div class="value-number">£29.0B</div>
+                    </div>
+                </div>
+                <div class="comparison-change positive">
+                    <span class="arrow-up"></span> +32.6% Change
+                </div>
+            </div>
+            
+            <div class="comparison-item">
+                <div class="comparison-title">Adjusted Revenue</div>
+                <div class="comparison-values">
+                    <div class="value-box">
+                        <div class="value-year">2015</div>
+                        <div class="value-number">£21.9B</div>
+                    </div>
+                    <div class="value-box">
+                        <div class="value-year">2024</div>
+                        <div class="value-number">£21.7B</div>
+                    </div>
+                </div>
+                <div class="comparison-change negative">
+                    <span class="arrow-down"></span> -0.09% Change
+                </div>
+            </div>
+            
+            <div class="comparison-item">
+                <div class="comparison-title">Adjusted Price</div>
+                <div class="comparison-values">
+                    <div class="value-box">
+                        <div class="value-year">2015</div>
+                        <div class="value-number">£47,308</div>
+                    </div>
+                    <div class="value-box">
+                        <div class="value-year">2024</div>
+                        <div class="value-number">£50,183</div>
+                    </div>
+                </div>
+                <div class="comparison-change positive">
+                    <span class="arrow-up"></span> +6.1% Change
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-title">Sales Volume (2015-2024)</div>
+                <div class="chart-subtitle">Number of vehicles sold annually</div>
+                <canvas id="salesVolumeChart"></canvas>
+                <div class="toggle-buttons" data-chart="salesVolumeChart">
+                    <button class="toggle-btn active" data-type="bar">Bar</button>
+                    <button class="toggle-btn" data-type="line">Line</button>
+                </div>
+            </div>
+            
+	    <div class="chart-container">
+	        <div class="chart-title">Revenue & Inflation-Adjusted Revenue (2015-2024)</div>
+	        <div class="chart-subtitle">Annual revenue in billions (£), adjusted for inflation</div>
+	        <canvas id="combinedRevenueChart"></canvas>
+	        <div class="toggle-buttons" data-chart="combinedRevenueChart">
+	            <button class="toggle-btn active" data-type="bar">Bar</button>
+	            <button class="toggle-btn" data-type="line">Line</button>
+	            <button class="toggle-btn" data-type="toggle-data">Toggle Adjusted</button>
+		    <button class="toggle-btn" data-type="toggle-nominal">Toggle Nominal</button>
+	        </div>
+	    </div>
+
+            
+            <div class="chart-container">
+                <div class="chart-title">Price per Vehicle (2015-2024)</div>
+                <div class="chart-subtitle">Average price per vehicle in GBP (nominal vs. inflation-adjusted)</div>
+                <canvas id="priceChart"></canvas>
+                <div class="toggle-buttons" data-chart="priceChart">
+                    <button class="toggle-btn" data-type="bar">Bar</button>
+                    <button class="toggle-btn active" data-type="line">Line</button>
+                    <button class="toggle-btn" data-type="toggle-data">Toggle Adjusted</button>
+		    <button class="toggle-btn" data-type="toggle-nominal">Toggle Nominal</button>
+                </div>
+                <div class="note">Note: Inflation adjustments based on 2015 GBP value</div>
+            </div>
+        </div>
+
+        <div class="data-table-container">
+            <div class="data-table-title">Jaguar Sales Data (2015-2024)</div>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Sales Volume</th>
+                        <th>Revenue (£)</th>
+                        <th>Price per Vehicle (£)</th>
+                        <th>Inflation Adjustment</th>
+                        <th>Adjusted Price (£)</th>
+                        <th>Adjusted Revenue (£)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table data will be filled by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<div class="sources-container">
+    <h2>Sources</h2>
+    <ul id="sourcesList"></ul>
+</div>
+
+    <footer>
+        <p>Jaguar Sales Performance Dashboard | Visualizing decade-long sales trends</p>
+        <p>Data last updated: March 10, 2025</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Sales data
+        const salesData = {
+            years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+            volume: [462209, 604009, 521571, 614309, 578915, 475952, 439588, 376381, 354662, 431733],
+            revenue: [21866000000, 24300000000, 22208000000, 25800000000, 24200000000, 22984000000, 19700000000, 18300000000, 22800000000, 29000000000],
+            pricePerVehicle: [47307.60, 40231.19, 42579.05, 41998.41, 41802.34, 48290.58, 44814.69, 48620.95, 64286.56, 67171.15],
+            inflationAdjustment: [1, 0.99, 0.97, 0.94, 0.93, 0.92, 0.90, 0.82, 0.76, 0.75],
+            adjustedPrice: [47307.60, 39967.55, 41194.72, 39650.36, 38770.87, 44410.82, 40174.40, 39951.49, 48628.28, 50182.82],
+            adjustedRevenue: [21866000000, 24140762100, 21485973504, 24357573600, 22445040200, 21137419472, 17660183200, 15036981900, 17246604000, 21665581000]
+        };
+
+        // Format numbers with commas and appropriate suffixes
+        function formatNumber(number, decimals = 0) {
+            return new Intl.NumberFormat('en-GB', { 
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            }).format(number);
+        }
+
+        function formatCurrency(number, billions = false) {
+            if (billions) {
+                return '£' + formatNumber(number / 1000000000, 1) + 'B';
+            }
+            return '£' + formatNumber(number);
+        }
+
+        // Fill the data table
+        function populateTable() {
+            const tableBody = document.querySelector('#dataTable tbody');
+            
+            for (let i = 0; i < salesData.years.length; i++) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${salesData.years[i]}</td>
+                    <td>${formatNumber(salesData.volume[i])}</td>
+                    <td>${formatCurrency(salesData.revenue[i])}</td>
+                    <td>${formatCurrency(salesData.pricePerVehicle[i], false)}</td>
+                    <td>${salesData.inflationAdjustment[i].toFixed(2)}</td>
+                    <td>${formatCurrency(salesData.adjustedPrice[i], false)}</td>
+                    <td>${formatCurrency(salesData.adjustedRevenue[i])}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+
+        // Chart configuration
+const chartConfig = {
+    salesVolumeChart: {
+        data: {
+            labels: salesData.years,
+            datasets: [{
+                label: 'Sales Volume',
+                data: salesData.volume,
+                backgroundColor: 'rgba(65, 90, 119, 0.7)',
+                borderColor: 'rgba(27, 38, 59, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Vehicles Sold'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.NumberFormat().format(value);
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Sales: ' + context.raw.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    combinedRevenueChart: {
+        data: {
+            labels: salesData.years,
+            datasets: [
+                {
+                    label: 'Nominal Revenue',
+                    data: salesData.revenue.map(val => val / 1_000_000_000),
+                    borderColor: 'rgba(13, 27, 42, 1)',
+                    backgroundColor: 'rgba(13, 27, 42, 0.2)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.3
+                },
+                {
+                    label: 'Inflation-Adjusted Revenue',
+                    data: salesData.adjustedRevenue.map(val => val / 1_000_000_000),
+                    borderColor: 'rgba(0, 106, 77, 1)',
+                    backgroundColor: 'rgba(0, 106, 77, 0.2)',
+                    borderWidth: 3,
+                    borderDash: [5, 5], // Dashed line for adjusted revenue
+                    fill: false,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Revenue (Billions £)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '£' + value.toFixed(1) + 'B';
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': £' + context.raw.toFixed(1) + ' billion';
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    priceChart: {
+        data: {
+            labels: salesData.years,
+            datasets: [
+                {
+                    label: 'Nominal Price',
+                    data: salesData.pricePerVehicle,
+                    borderColor: 'rgba(13, 27, 42, 1)',
+                    backgroundColor: 'rgba(13, 27, 42, 0.2)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.3
+                },
+                {
+                    label: 'Inflation-Adjusted Price',
+                    data: salesData.adjustedPrice,
+                    borderColor: 'rgba(0, 106, 77, 1)',
+                    backgroundColor: 'rgba(0, 106, 77, 0.2)',
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Price per Vehicle (£)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '£' + new Intl.NumberFormat().format(value);
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Year'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': £' + new Intl.NumberFormat().format(context.raw);
+                        }
+                    }
+                }
+            }
+        }
+    }
+};
+
+        // Create charts
+        const charts = {};
+
+        function createCharts() {
+            // Create Sales Volume Chart
+            charts.salesVolumeChart = new Chart(
+                document.getElementById('salesVolumeChart'),
+                {
+                    type: 'line',
+                    data: chartConfig.salesVolumeChart.data,
+                    options: chartConfig.salesVolumeChart.options
+                }
+            );
+            
+            // Create Revenue Chart
+            charts.combinedRevenueChart = new Chart(
+    document.getElementById('combinedRevenueChart'),
+    {
+        type: 'line',
+        data: chartConfig.combinedRevenueChart.data,
+        options: chartConfig.combinedRevenueChart.options
+    }
+);
+            
+            // Create Price Chart
+            charts.priceChart = new Chart(
+                document.getElementById('priceChart'),
+                {
+                    type: 'line',
+                    data: chartConfig.priceChart.data,
+                    options: chartConfig.priceChart.options
+                }
+            );
+        }
+
+        // Handle toggle buttons
+        function setupToggleButtons() {
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const chartId = this.parentElement.getAttribute('data-chart');
+            const type = this.getAttribute('data-type');
+
+            if (!charts[chartId]) return; // Prevent error if chart is undefined
+
+            const chartInstance = charts[chartId];
+
+            if (type === 'toggle-data') {
+                // Toggle Inflation-Adjusted Data (Dataset Index 1)
+                if (chartInstance.data.datasets.length > 1) {
+                    const visible = chartInstance.isDatasetVisible(1);
+                    if (visible) {
+                        chartInstance.hide(1);
+                        this.textContent = 'Show Adjusted';
+                    } else {
+                        chartInstance.show(1);
+                        this.textContent = 'Hide Adjusted';
+                    }
+                }
+            } else if (type === 'toggle-nominal') {
+                // Toggle Nominal Data (Dataset Index 0)
+                if (chartInstance.data.datasets.length > 0) {
+                    const visible = chartInstance.isDatasetVisible(0);
+                    if (visible) {
+                        chartInstance.hide(0);
+                        this.textContent = 'Show Nominal';
+                    } else {
+                        chartInstance.show(0);
+                        this.textContent = 'Hide Nominal';
+                    }
+                }
+            } else {
+                chartInstance.config.type = type;
+                chartInstance.update();
+            }
+        });
+    });
+}
+
+// Array of source links
+const sources = [
+    { name: "Jaguar Annual Report 2015", url: "https://example.com/report-2015" },
+    { name: "Jaguar Annual Report 2024", url: "https://example.com/report-2024" },
+    { name: "UK Inflation Data", url: "https://example.com/inflation-data" },
+    { name: "Global Car Sales Stats", url: "https://example.com/global-sales" },
+    { name: "Automotive Market Trends", url: "https://example.com/market-trends" },
+    { name: "Financial Report Jaguar 2020", url: "https://example.com/finance-2020" },
+    { name: "Jaguar Official Sales Figures", url: "https://example.com/sales-figures" },
+    { name: "Historical GBP Inflation Rates", url: "https://example.com/gbp-inflation" },
+    { name: "UK Auto Industry Report", url: "https://example.com/auto-industry" },
+    { name: "Jaguar Revenue Analysis", url: "https://example.com/revenue-analysis" }
+];
+
+// Function to insert links into the Sources section
+function populateSources() {
+    const sourcesList = document.getElementById("sourcesList");
+    
+    sources.forEach(source => {
+        const listItem = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = source.url;
+        link.target = "_blank"; // Opens in new tab
+        link.textContent = source.name;
+        
+        listItem.appendChild(link);
+        sourcesList.appendChild(listItem);
+    });
+}
+
+        // Format the current date
+        function setCurrentDate() {
+            const dateElement = document.getElementById('current-date');
+            const now = new Date();
+            dateElement.textContent = `Data as of ${now.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+        }
+
+        // Initialize everything when the page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            populateTable();
+            createCharts();
+	    populateSources();
+            setupToggleButtons();
+            setCurrentDate();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            // Redraw charts when window size changes
+            for (const chartId in charts) {
+                if (charts.hasOwnProperty(chartId)) {
+                    charts[chartId].resize();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
